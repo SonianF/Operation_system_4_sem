@@ -1,0 +1,60 @@
+#include <iostream>
+#include <string>
+using namespace std;
+
+const int symbols_ignore = 32767;
+
+void programTask() {
+    cout << "Вариант 12. Пользователь вводит 2 числа: сумма вклада и годовой процент. Требуется расчитать, какая сумма окажется через год." << endl;
+}
+
+double check_num(bool& flag) {  //проверка введенных значений на корректность
+    if (flag == false) cout << "Введите сумму вклада: ";
+    else cout << "Введите годовой процент: ";
+    string lenght = ""; //вводим строковую переменную
+    getline(cin, lenght);
+    if (lenght.find_first_not_of("1234567890,") != -1) { //если введенное значение содержит что-то кроме цифр и разделяющих символов, то выдается ошибка
+        cout << "Пожалуйста, введите неотрицательное число, если оно имеет дробную часть запишите ее используя запятую. " << endl;
+        return check_num(flag); //повторный ввод
+    }
+    else {
+        flag = !flag;
+        return stod(lenght);
+    }
+}
+
+double calculateResult(double sum, double percent) {
+    return sum * (1 + percent / 100);
+}
+
+bool check_process()
+{
+    cout << "Хотите продолжить? (Y/N) >";
+    char answer;
+    while (!(cin >> answer) || cin.peek() != '\n' || (answer != 'y' && answer != 'Y' && answer != 'n' && answer != 'N'))
+    {
+        cin.clear();
+        cin.ignore(symbols_ignore, '\n');
+        cout << "Ошибка! Пожалуйста, введите Y для продолжения работы или N для выхода из программы.";
+    }
+    if (answer == 'y' || answer == 'Y')
+        return true;
+    else {
+        cout << "Спасибо за использование! Всего наилучшего :)";
+        return false;
+    }
+}
+
+int main() {
+    setlocale(LC_ALL, "Russian");
+    bool process = true;
+    while (process) {
+        bool flag0 = false;
+        double sum = check_num(flag0);
+        double perc = check_num(flag0);
+
+        double result = calculateResult(sum, perc);
+        cout << "Сумма через год станет равна " << result << endl;
+    }
+    process=check_process();
+}
