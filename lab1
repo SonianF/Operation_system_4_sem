@@ -27,34 +27,29 @@ double calculateResult(double sum, double percent) {
     return sum * (1 + percent / 100);
 }
 
-bool check_process()
-{
+bool check_process() {
     cout << "Хотите продолжить? (Y/N) >";
-    char answer;
-    while (!(cin >> answer) || cin.peek() != '\n' || (answer != 'y' && answer != 'Y' && answer != 'n' && answer != 'N'))
-    {
-        cin.clear();
-        cin.ignore(symbols_ignore, '\n');
+    char anwser;
+    while (!(cin >> anwser) || cin.peek() != '\n' || anwser != 'Y' && anwser != 'y' && anwser != 'N' && anwser != 'n') {
+        cin.clear(); //очищаем поток от флага ошибки
+        cin.ignore(32767, '\n'); //очищаем поток от символов
         cout << "Ошибка! Пожалуйста, введите Y для продолжения работы или N для выхода из программы.";
     }
-    if (answer == 'y' || answer == 'Y')
-        return true;
-    else {
-        cout << "Спасибо за использование! Всего наилучшего :)";
-        return false;
-    }
+    cin.ignore(32767, '\n'); //очищаем поток от символов
+    return(anwser == 'Y' || anwser == 'y');
 }
 
 int main() {
     setlocale(LC_ALL, "Russian");
+    bool flag0 = false;
     bool process = true;
     while (process) {
-        bool flag0 = false;
         double sum = check_num(flag0);
         double perc = check_num(flag0);
 
         double result = calculateResult(sum, perc);
         cout << "Сумма через год станет равна " << result << endl;
+
+        process = check_process();
     }
-    process=check_process();
 }
