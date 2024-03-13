@@ -1,0 +1,165 @@
+#include <fcntl.h>
+#include <sys/stat.h> // для получения данных о размере файла
+#include <unistd.h>
+#include <cstring>
+#include <iostream>
+#include <fstream>
+#include <regex>
+
+using namespace std;
+
+void copy (char* filename, char* newFilename) {
+        ifstream fin;
+        size_t bufsize = 3;
+        char* buffer = new char[bufsize];
+        fin.open(filename, ios::binary);
+        if (filename==newFilename) {
+        cout <<"Identical file names!";
+        }
+        if (!fin.is_open()) {
+        cout <<"File isn`t found!\n";
+        }
+        ofstream fout;
+        fout.open(newFilename, ios::binary); //ios::binary - открытие файла в бинарном режиме
+        while (!fin.eof()) { // читаем, пока не дошли конца файла
+                fin.read(buffer, bufsize); //байты из файла в указанную область памяти
+                if (fin.gcount()) { //пока есть символы в строке
+                        fout.write(buffer, fin.gcount()); // write(Указатель на блок данных и количество байт, который этот блок занимает)
+                }
+        }
+        delete[] buffer;
+        fin.close();
+        fout.close();
+        cout << "Success!\n";
+}
+
+
+void move (char* filename, char* nameDir){
+
+        char* dirToMove = new char[strlen(filename) + strlen(nameDir)]; //strlen = определяет длину строки
+        strcat(dirToMove, nameDir); //обЪединение все в один путь
+        strcat(dirToMove, "/");
+        strcat(dirToMove, filename);
+        strcat(dirToMove, "\0");
+        rename(filename, dirToMove);
+}
+
+const char* file_mode(struct stat statbuffer)
+{
+    char* mode = new char[9];
+    mode[0] = (statbuffer.st_mode & S_IRUSR) ? 'r' : '-';
+    mode[1] = (statbuffer.st_mode & S_IWUSR) ? 'w' : '-';
+    mode[2] = (statbuffer.st_mode & S_IXUSR) ? 'x' : '-';
+    mode[3] = (statbuffer.st_mode & S_IRGRP) ? 'r' : '-';
+    mode[4] = (statbuffer.st_mode & S_IWGRP) ? 'w' : '-';
+    mode[5] = (statbuffer.st_mode & S_IXGRP) ? 'x' : '-';
+    mode[6] = (statbuffer.st_mode & S_IROTH) ? 'r' : '-';
+    mode[7] = (statbuffer.st_mode & S_IWOTH) ? 'w' : '-';
+    mode[8] = (statbuffer.st_mode & S_IXOTH) ? 'x' : '-';
+    return mode;
+}
+
+void info (char* filename) {
+        struct stat buffer;
+        if (lstat(filename, &buffer) < 0) { //
+                cout << "Error\n";
+        }
+        else {
+                cout << "Mode: ";
+                cout << file_mode(buffer) << "\n";
+                cout << "Size of file: " << buffer.st_size << " bytes\n";
+                cout << "Time of last access:" << ctime(&buffer.st_atime);
+                cout << "Time of last modification:" << ctime(&buffer.st_mtime);
+                cout << "Time of last state change:" << ctime(&buffer.st_ctime);
+                cout << "" << buffer.st_gid;
+        }
+}
+
+
+int get_code(string mask);
+void chage_of_rigts(char* name, char* mode) {
+        ifstream file;
+        file.open(name, ios::binary);
+        if (!file.is_open()) {
+                cout << "Error, file not found!\n";
+        }
+        else {
+                const regex reg3("([0-7])([0-7])([0-7])");
+                  const regex reg9("(r|-)(w|-)(x|-)(r|-)(w|-)(x|-)(r|-)(w|-)(x|-)");
+                if (regex_match(mode, reg3)) {
+                        string samples[] = {"---","--x","-w-","-wx","r--","r-x"};
+                        int mask = stoi(mode);
+                        string ans;
+                        while (mask != 0) {
+                                ans = samples[mask % 10] + ans;
+                                mask /= 10;
+                        }
+                        int code = get_code(ans);
+                        chmod(name, code);
+                        cout << "Success!\n";
+                }
+                else if (regex_match(mode, reg9)) {
+                        int code = get_code(mode);
+                        chmod(name, code);
+                        cout << "Success!\n";
+                }
+                else {
+                        cout << "Error format input!\n";
+                }
+        }
+}
+int get_code(string mask) {
+        int ans = 0;
+        int x = 256;
+        for (int i = 0; i < mask.length(); ++i) {
+                if (mask[i] != '-') {
+                        ans += x;
+                }
+                x /= 2;
+        }
+        return ans;
+}
+
+void deleteFile (char* filename) {
+if (unlink(filename)==0) {
+    cout << "Delete success!/n";
+}
+else {
+    cout << "Error!";
+}
+}
+
+int main (int argc, char* argv[]) {
+        if(argc == 2 && !strcmp(argv[1], "--help"))
+                 {
+        cout << "Options:" << '\n';
+        cout << "Enter --copy [FILENAME] [NEWFILENAME] to copy first file into second file" << '\n';
+        cout << "Enter --move [FILENAME] [DIRNAME] to move file into the marked directory" << '\n';
+        cout << "Enter --info [FILENAME] to get information about the marked file" << '\n';
+        cout << "Enter --chmod [FILENAME] [MODE] to change mode of the marked file" << '\n';
+        cout << "[MODE] = [*** where * equals a number 0-7] | [rwxrwxrwx]" << '\n';
+         }
+        if (argc > 1) {
+                if (strcmp(argv[1], "--copy") == 0 && argc == 4) {
+                        copy(argv[2], argv[3]);
+                }
+                else if (strcmp(argv[1], "--move") == 0 && argc == 4) {
+                        move(argv[2], argv[3]);
+                        cout << "Successfully!\n";
+                }
+                else if (strcmp(argv[1], "--info") == 0 && argc == 3) {
+                        info(argv[2]);
+                }
+                else if (strcmp(argv[1], "--delete") == 0 && argc == 3) {
+                        deleteFile(argv[2]);
+                }
+                else if (strcmp(argv[1], "--chmod") == 0 && argc == 4) {
+                        chage_of_rigts(argv[2], argv[3]);
+                } else {
+                        cout << "enter ./final --help for requirements\n";
+                }
+        } else {
+                cout << "enter ./final --help for requirements\n";
+        }
+        return 0;
+}
