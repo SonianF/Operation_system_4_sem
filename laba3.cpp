@@ -12,18 +12,6 @@ cout << "Справка:\n" <<"Чтобы решить систему уравн
 cout <<"Для смены функции вычисления измените function() в исходном коде программы\n>_<\n";
 }
 
-struct GAUSS {
-  int n;
-  double** a;
-  double* y;
-};
-
-
-/*
-//Функция чтения чисел с плавающей точкой
-//Производит проверку ввода, с случае ошибки ввод повторяется
-//Возвращает правильное число, введенное пользователем
-*/
 double read_double(int &i, int &j, bool var)
 {   double result;
     //string result;
@@ -43,11 +31,6 @@ double read_double(int &i, int &j, bool var)
     return result;
 }
 
-/*
-//Функция чтения чисел
-//Производит проверку ввода, с случае ошибки ввод повторяется
-//Возвращает правильное число, введенное пользователем
-*/
 int read_int(const string& msg)
 {   int result;
     string input;
@@ -78,6 +61,7 @@ void sysout(double** a, double* y, int n) // Вывод системы урав�
   }
   return;
 }
+
 
 double* gauss(double** a, double* y, int n)
 {
@@ -148,57 +132,90 @@ int pipe_out[2];
 pid_t pid;
 
 
-/*
-//Клиентская часть программы
-//Принимает данные: левую границу, правую границу и количество прямо-
-угольников
-//Записывает и читает в/из неименованных каналов
-//Выводит результат вычислений
-*/
+void writeToPipe(int fd, double** &a, double* &y, int &n, double* &x) {
+  write(fd, &n, sizeof(int));
+  for (int i=0; i<n; ++i) {
+    for (int j=0; j<n; ++j){
+      write(fd, &a[i][j], sizeof(double));
+    }
+    write(fd, &y[i], sizeof(double));
+    write(fd, &x[i], sizeof(double));
+  }
+}
+
+
+void readFromPipe(int fd, double** &a, double* &y, int &n, double* &x) {
+  read(fd, &n, sizeof(int));
+  a = new double*[n];
+  for (int i=0; i<n; ++i) {
+    a[i]=new double[n];
+  }
+  y = new double[n];
+  x = new double[n];
+
+  for (int i=0; i<n; ++i) {
+    for (int j=0; j<n; ++j){
+      read(fd, &a[i][j], sizeof(int));
+    }
+    read(fd, &y[i], sizeof(int));
+    read(fd, &x[i], sizeof(int));
+  }
+
+}
+
 void frontend()
 {
-  GAUSS data;
-  data.n = read_int("Введите количество уравнений: ");
-  data.a = new double* [data.n];
-  data.y = new double[data.n];
-    for (int i = 0; i < data.n; i++)
+  int n = read_int("Введите количество уравнений: ");
+  double** a = new double* [n];
+  double* y = new double[n];
+   double* x = new double[n];
+    for (int i = 0; i < n; i++)
     {
-     data.a[i] = new double[data.n];
-        for (int j = 0; j < data.n; j++)
-        {data.a[i][j] = read_double(i,j,true);}
+        a[i] = new double[n];
+        for (int j = 0; j < n; j++)
+        {a[i][j] = read_double(i,j,true);}
      }
-     for (int i = 0, j=1; i < data.n; i++)
+     for (int i = 0, j=1; i < n; i++)
     {
-     data.y[i] = read_double(i, j, 0);
+     y[i] = read_double(i, j, 0);
    }
-   cout << "before  " <<endl;
-   sysout(data.a, data.y, data.n);
-   write(pipe_in[1], &data, sizeof(GAUSS));
-   double* result;
-   cout << "WRITE FRONT" <<endl;
-read(pipe_out[0], &result, sizeof(double*));
-cout << "Результат: " << endl;
-for (int i=0; i<data.n; i++) {
-  cout << "x["<<i+1<<"]= " << result[i]<< endl;
-}
-exit(0);
+   sysout(a, y, n);
+   writeToPipe(pipe_in[1], a, y, n, x);
+    readFromPipe(pipe_out[0], a, y, n,x);
+    cout << "Результат: " << endl;
+    for (int i=0; i<n; i++) {
+     cout << "x["<<i+1<<"]= " << x[i]<< endl;
+    }
+    exit(0);
+
+    for(int i = 0; i < n; ++i)
+        delete[] a[i];
+    delete[] a;
+
+    delete [] x;
+    delete [] y;
 }
 
 
-/*
-//Серверная часть программы
-//Производит вычисления по данным, переданным клиентской частью по не-
-именованному каналу
-//Записывает результат вычисления в неименованный канал
-*/
 void backend()
 {
-GAUSS data;
-read(pipe_in[0], &data, sizeof(GAUSS));
-cout << "aftr" <<endl;
-double* result = gauss(data.a, data.y, data.n);
-write(pipe_out[1], &result, sizeof(result));
-cout << "WRITE BACK" <<endl;
+int n;
+double** a = new double* [n];
+double* y = new double[n];
+double* x = new double[n];
+readFromPipe(pipe_out[0], a, y, n, x);
+cout << a[1]<<endl;
+x = gauss(a, y, n);
+cout << x <<endl;
+writeToPipe(pipe_out[1], a, y, n, x);
+
+for(int i = 0; i < n; ++i)
+    delete[] a[i];
+delete[] a;
+
+delete [] x;
+delete [] y;
+
 }
 
 int main(int argc, char const *argv[]) {
