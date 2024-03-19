@@ -1,4 +1,4 @@
-//метод Гаусса для решения системы уравнений
+  //метод Гаусса для решения системы уравнений
 #include <iostream>
 #include <cstdlib>
 #include <string>
@@ -33,7 +33,7 @@ int read_int(const string& msg) //ввод количества уравнени
     while (flag) {
         cout << msg;
         cin >> result;
-        if((result <=0) || (cin.fail() || (cin.peek() != '\n'))){
+        if((result <=2) || (cin.fail() || (cin.peek() != '\n'))){
             cin.clear();
             cin.ignore(1000, '\n');
             cout << " > Ошибка ввода, попробуйте еще раз\n"; }
@@ -123,6 +123,7 @@ double* gauss(double** a, double* y, int n)
   return x;
 }
 
+
 void sysout(double** a, double* y, int n) // Вывод системы уравнений
 {
   for (int i = 0; i < n; i++)
@@ -139,7 +140,7 @@ void sysout(double** a, double* y, int n) // Вывод системы урав�
 }
 
 void writeToPipe (int fd, GAUSS& data) {
-    write(fd, &data.n, sizeof(int));
+    //write(fd, &data.n, sizeof(int));
     for (int i=0; i<data.n; ++i) {
         for (int j=0; j<data.n; ++j){
             write(fd, &data.a[i][j], sizeof(double));
@@ -151,7 +152,7 @@ void writeToPipe (int fd, GAUSS& data) {
 
 
 void readFromPipe(int fd, GAUSS& data) {
-    read(fd, &data.n, sizeof(int));
+    //read(fd, &data.n, sizeof(int));
   double** a = new double* [data.n];
   for (int i=0; i< data.n; ++i) {
     data.a[i] = new double[data.n];
@@ -166,13 +167,6 @@ void readFromPipe(int fd, GAUSS& data) {
     read(fd, &data.y[i], sizeof(int));
     read(fd, &data.x[i], sizeof(int));
   }
-
-    for(int i = 0; i < data.n; ++i)
-        delete[] data.a[i];
-    delete[] data.a;
-
-    delete [] data.x;
-    delete [] data.y;
 
 }
 
@@ -196,9 +190,8 @@ void frontend()
     }
    sysout(data.a, data.y, data.n);
    writeToPipe(pipe_in[1], data);
-   cout << "write to pipe" << endl;
-readFromPipe(pipe_out[0], data);
-cout << "read front" << endl;
+    readFromPipe(pipe_out[0], data);
+    
 cout << "Результат: " << endl;
 for (int i=0; i<data.n; i++) {
   cout << "x["<<i+1<<"]= " << data.x[i]<< endl;
@@ -221,11 +214,9 @@ GAUSS data;
   data.y = new double[data.n];
   data.x = new double[data.n];
 readFromPipe(pipe_in[0], data);
-cout << "aftr" <<endl;
 data.x = gauss(data.a, data.y, data.n);
-cout << "gauss back" << endl;
 writeToPipe(pipe_out[1], data);
-cout << "write back" << endl;
+
     for(int i = 0; i < data.n; ++i)
         delete[] data.a[i];
     delete[] data.a;
@@ -233,6 +224,7 @@ cout << "write back" << endl;
     delete [] data.x;
     delete [] data.y;
 }
+
 
 int main(int argc, char const *argv[]) {
   setlocale(LC_ALL, 0);
@@ -261,7 +253,5 @@ int main(int argc, char const *argv[]) {
       close(pipe_out[i]);
       }
   }
-  return 0;
+  //return 0;
 }
-
-https://www.cyberforum.ru/cpp-beginners/thread571966.html?ysclid=ltyetdrhar137468310
