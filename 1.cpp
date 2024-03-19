@@ -69,37 +69,6 @@ double read_double(int &i, int &j, bool var) //ввод коэффециетно
     return result;
 }
 
-
-void writeToPipe (int fd, GAUSS& data) {
-    write(fd, &data.n, sizeof(int));
-    for (int i=0; i<data.n; ++i) {
-        for (int j=0; j<data.n; ++j){
-            write(fd, &data.a[i][j], sizeof(double));
-        }
-        write(fd, &data.y[i], sizeof(double));
-        write(fd, &data.x[i], sizeof(double));
-    }
-}
-
-
-void readFromPipe(int fd, GAUSS& data) {
-  read(fd, &data.n, sizeof(int));
-
-  double** a = new double* [data.n];
-  for (int i=0; i< data.n; ++i) {
-    data.a[i] = new double[data.n];
-  }
-
-  for (int i=0; i<data.n; ++i) {
-    for (int j=0; j<data.n; ++j){
-      read(fd, &data.a[i][j], sizeof(int));
-    }
-    read(fd, &data.y[i], sizeof(int));
-    read(fd, &data.x[i], sizeof(int));
-  }
-
-}
-
 double* gauss(double** a, double* y, int n)
 {
   double* x, max;
@@ -177,6 +146,39 @@ void sysout(double** a, double* y, int n) // Вывод системы урав�
   return;
 }
 
+void writeToPipe (int fd, GAUSS& data) {
+    write(fd, &data.n, sizeof(int));
+    for (int i=0; i<data.n; ++i) {
+        for (int j=0; j<data.n; ++j){
+            write(fd, &data.a[i][j], sizeof(double));
+        }
+        write(fd, &data.y[i], sizeof(double));
+        write(fd, &data.x[i], sizeof(double));
+    }
+}
+
+
+void readFromPipe(int fd, GAUSS& data) {
+  read(fd, &data.n, sizeof(int));
+
+  double** a = new double* [data.n];
+  for (int i=0; i< data.n; ++i) {
+    data.a[i] = new double[data.n];
+  }
+  double* y = new double* [data.n];
+  double* x = new double* [data.n];
+  
+  for (int i=0; i<data.n; ++i) {
+    for (int j=0; j<data.n; ++j){
+      read(fd, &data.a[i][j], sizeof(int));
+    }
+    read(fd, &data.y[i], sizeof(int));
+    read(fd, &data.x[i], sizeof(int));
+  }
+
+}
+
+
 void frontend()
 {
   GAUSS data;
@@ -216,11 +218,11 @@ exit(0);
 void backend()
 {
 GAUSS data;
-readFromPipe(pipe_in[0], data);
-data.n;
+  data.n;
   data.a = new double* [data.n];
   data.y = new double[data.n];
   data.x = new double[data.n];
+readFromPipe(pipe_in[0], data);
 cout << "aftr" <<endl;
 data.x = gauss(data.a, data.y, data.n);
 writeToPipe(pipe_out[1], data);
