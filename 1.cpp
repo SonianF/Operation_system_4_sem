@@ -24,14 +24,6 @@ struct GAUSS {
   double** a; //коэффециенты
   double* y; //значения уравнений
   double* x; //массив с корнями
-
-  ~GAUSS (){
-    for(int i = 0; i < n; ++i)
-      delete[] a[i];
-    delete[] a;
-    delete [] x;
-    delete [] y;
-  }
 };
 
 int read_int(const string& msg) //ввод количества уравнений 
@@ -159,14 +151,13 @@ void writeToPipe (int fd, GAUSS& data) {
 
 
 void readFromPipe(int fd, GAUSS& data) {
-  read(fd, &data.n, sizeof(int));
-
+    read(fd, &data.n, sizeof(int));
   double** a = new double* [data.n];
   for (int i=0; i< data.n; ++i) {
     data.a[i] = new double[data.n];
   }
-  double* y = new double* [data.n];
-  double* x = new double* [data.n];
+  double* y = new double[data.n];
+  double* x = new double[data.n];
   
   for (int i=0; i<data.n; ++i) {
     for (int j=0; j<data.n; ++j){
@@ -175,6 +166,13 @@ void readFromPipe(int fd, GAUSS& data) {
     read(fd, &data.y[i], sizeof(int));
     read(fd, &data.x[i], sizeof(int));
   }
+
+    for(int i = 0; i < data.n; ++i)
+        delete[] data.a[i];
+    delete[] data.a;
+
+    delete [] data.x;
+    delete [] data.y;
 
 }
 
@@ -200,32 +198,34 @@ void frontend()
    writeToPipe(pipe_in[1], data);
    cout << "write to pipe" << endl;
 readFromPipe(pipe_out[0], data);
+cout << "read front" << endl;
 cout << "Результат: " << endl;
 for (int i=0; i<data.n; i++) {
   cout << "x["<<i+1<<"]= " << data.x[i]<< endl;
 }
-exit(0);
-
     for(int i = 0; i < data.n; ++i)
         delete[] data.a[i];
     delete[] data.a;
 
     delete [] data.x;
     delete [] data.y;
+exit(0);
 }
 
 
 void backend()
 {
 GAUSS data;
-  data.n;
+  data.n = read(pipe_in[0], &data.n, sizeof(int));
   data.a = new double* [data.n];
   data.y = new double[data.n];
   data.x = new double[data.n];
 readFromPipe(pipe_in[0], data);
 cout << "aftr" <<endl;
 data.x = gauss(data.a, data.y, data.n);
+cout << "gauss back" << endl;
 writeToPipe(pipe_out[1], data);
+cout << "write back" << endl;
     for(int i = 0; i < data.n; ++i)
         delete[] data.a[i];
     delete[] data.a;
