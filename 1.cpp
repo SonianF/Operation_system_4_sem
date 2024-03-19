@@ -1,4 +1,6 @@
+//метод Гаусса для решения системы уравнений
 #include <iostream>
+#include <cstdlib>
 #include <string>
 #include <sys/types.h>
 #include <unistd.h>
@@ -22,6 +24,14 @@ struct GAUSS {
   double** a; //коэффециенты
   double* y; //значения уравнений
   double* x; //массив с корнями
+
+  ~GAUSS (){
+    for(int i = 0; i < n; ++i)
+    delete[] a[i];
+    delete[] a;
+    delete [] x;
+    delete [] y;
+  }
 };
 
 int read_int(const string& msg) //ввод количества уравнений 
@@ -75,11 +85,17 @@ void writeToPipe (int fd, GAUSS& data) {
 void readFromPipe(int fd, GAUSS& data) {
   read(fd, &data.n, sizeof(int));
 
+  double** a1 = new double* [data.n];
+  for (int i=0; i< data.n; ++i) {
+    data.a[i] = new double[data.n];
+  }
+
   for (int i=0; i<data.n; ++i) {
     for (int j=0; j<data.n; ++j){
       read(fd, &data.a[i][j], sizeof(int));
     }
     read(fd, &data.y[i], sizeof(int));
+    read(fd, &data.x[i], sizeof(int));
   }
 
 }
@@ -187,6 +203,13 @@ for (int i=0; i<data.n; i++) {
   cout << "x["<<i+1<<"]= " << data.x[i]<< endl;
 }
 exit(0);
+
+    for(int i = 0; i < data.n; ++i)
+        delete[] data.a[i];
+    delete[] data.a;
+
+    delete [] data.x;
+    delete [] data.y;
 }
 
 
@@ -194,9 +217,19 @@ void backend()
 {
 GAUSS data;
 readFromPipe(pipe_in[0], data);
+data.n;
+  data.a = new double* [data.n];
+  data.y = new double[data.n];
+  data.x = new double[data.n];
 cout << "aftr" <<endl;
 data.x = gauss(data.a, data.y, data.n);
 writeToPipe(pipe_out[1], data);
+    for(int i = 0; i < data.n; ++i)
+        delete[] data.a[i];
+    delete[] data.a;
+
+    delete [] data.x;
+    delete [] data.y;
 }
 
 int main(int argc, char const *argv[]) {
