@@ -33,7 +33,7 @@ int read_int(const string& msg) //ввод количества уравнени
     while (flag) {
         cout << msg;
         cin >> result;
-        if((result <=2) || (cin.fail() || (cin.peek() != '\n'))){
+        if((result <=1) || (cin.fail() || (cin.peek() != '\n'))){
             cin.clear();
             cin.ignore(1000, '\n');
             cout << " > Ошибка ввода, попробуйте еще раз\n"; }
