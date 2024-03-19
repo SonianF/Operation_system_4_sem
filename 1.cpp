@@ -147,6 +147,20 @@ double* gauss(double** a, double* y, int n)
   return x;
 }
 
+void sysout(double** a, double* y, int n) // Вывод системы уравнений
+{
+  for (int i = 0; i < n; i++)
+  {
+    for (int j = 0; j < n; j++)
+    {
+      cout << a[i][j] << "*x" << j;
+      if (j < n - 1)
+        cout << " + ";
+    }
+    cout << " = " << y[i] << endl;
+  }
+  return;
+}
 
 void frontend()
 {
@@ -163,8 +177,9 @@ void frontend()
     }
     for (int i = 0, j=1; i < data.n; i++)
     { data.y[i] = read_double(i, j, 0);
+        data.x[i] = 0;
     }
-   //sysout(data.a, data.y, data.n);
+   sysout(data.a, data.y, data.n);
    writeToPipe(pipe_in[1], data);
    cout << "write to pipe" << endl;
 readFromPipe(pipe_out[0], data);
