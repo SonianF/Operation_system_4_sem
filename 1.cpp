@@ -162,10 +162,10 @@ void readFromPipe(int fd, GAUSS& data) {
   
   for (int i=0; i<data.n; ++i) {
     for (int j=0; j<data.n; ++j){
-      read(fd, &data.a[i][j], sizeof(int));
+      read(fd, &data.a[i][j], sizeof(double));
     }
-    read(fd, &data.y[i], sizeof(int));
-    read(fd, &data.x[i], sizeof(int));
+    read(fd, &data.y[i], sizeof(double));
+    read(fd, &data.x[i], sizeof(double));
   }
 
 }
@@ -209,7 +209,7 @@ exit(0);
 void backend()
 {
 GAUSS data;
-  data.n = read(pipe_in[0], &data.n, sizeof(int));
+  read(pipe_in[0], &data.n, sizeof(int));
   data.a = new double* [data.n];
   data.y = new double[data.n];
   data.x = new double[data.n];
