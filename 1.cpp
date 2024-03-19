@@ -1,3 +1,4 @@
+//метод Гаусса для решения системы уравнений
 #include <iostream>
 #include <string>
 #include <sys/types.h>
@@ -146,29 +147,23 @@ double* gauss(double** a, double* y, int n)
   return x;
 }
 
-/*
-//Клиентская часть программы
-//Принимает данные: левую границу, правую границу и количество прямо-
-угольников
-//Записывает и читает в/из неименованных каналов
-//Выводит результат вычислений
-*/
+
 void frontend()
 {
   GAUSS data;
   data.n = read_int("Введите количество уравнений: ");
   data.a = new double* [data.n];
   data.y = new double[data.n];
+  data.x = new double[data.n];
     for (int i = 0; i < data.n; i++)
     {
      data.a[i] = new double[data.n];
         for (int j = 0; j < data.n; j++)
         {data.a[i][j] = read_double(i,j,true);}
-     }
-     for (int i = 0, j=1; i < data.n; i++)
-    {
-     data.y[i] = read_double(i, j, 0);
-   }
+    }
+    for (int i = 0, j=1; i < data.n; i++)
+    { data.y[i] = read_double(i, j, 0);
+    }
    //sysout(data.a, data.y, data.n);
    writeToPipe(pipe_in[1], data);
    cout << "write to pipe" << endl;
@@ -181,12 +176,6 @@ exit(0);
 }
 
 
-/*
-//Серверная часть программы
-//Производит вычисления по данным, переданным клиентской частью по не-
-именованному каналу
-//Записывает результат вычисления в неименованный канал
-*/
 void backend()
 {
 GAUSS data;
