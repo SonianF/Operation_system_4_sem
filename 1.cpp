@@ -140,7 +140,7 @@ void sysout(double** a, double* y, int n) // Вывод системы урав�
 }
 
 void writeToPipe (int fd, GAUSS& data) {
-    //write(fd, &data.n, sizeof(int));
+    write(fd, &data.n, sizeof(int));
     for (int i=0; i<data.n; ++i) {
         for (int j=0; j<data.n; ++j){
             write(fd, &data.a[i][j], sizeof(double));
@@ -153,12 +153,12 @@ void writeToPipe (int fd, GAUSS& data) {
 
 void readFromPipe(int fd, GAUSS& data) {
     //read(fd, &data.n, sizeof(int));
-  double** a = new double* [data.n];
-  for (int i=0; i< data.n; ++i) {
-    data.a[i] = new double[data.n];
-  }
-  double* y = new double[data.n];
-  double* x = new double[data.n];
+  // double** a = new double* [data.n];
+  // for (int i=0; i< data.n; ++i) {
+  //   data.a[i] = new double[data.n];
+  // }
+  // double* y = new double[data.n];
+  // double* x = new double[data.n];
   
   for (int i=0; i<data.n; ++i) {
     for (int j=0; j<data.n; ++j){
@@ -176,6 +176,8 @@ void frontend()
   GAUSS data;
   data.n = read_int("Введите количество уравнений: ");
   data.a = new double* [data.n];
+  for (int i=0; i<data.n; i++) {
+    data.a[i] == new double[data.n];
   data.y = new double[data.n];
   data.x = new double[data.n];
     for (int i = 0; i < data.n; i++)
