@@ -42,7 +42,7 @@ int read_int(const string& msg) //ввод количества уравнени
     return result;
 }
 
-double read_double(int &i, int &j, bool var) //ввод коэффециетнов и значений
+double read_double(int &i, int &j, bool var) //ввод коэффициетнов и значений
 {   double result;
     //string result;
     bool flag = true;
@@ -61,7 +61,7 @@ double read_double(int &i, int &j, bool var) //ввод коэффециетно
     return result;
 }
 
-double* gauss(double** a, double* y, int n)
+double* gauss(double** a, double* y, int n) //метод Гаусса
 {
   double* x, max;
   int k, index;
@@ -139,11 +139,11 @@ void sysout(double** a, double* y, int n) // Вывод системы урав�
   return;
 }
 
-void writeToPipe (int fd, GAUSS& data) {
-    write(fd, &data.n, sizeof(int));
+void writeToPipe (int fd, GAUSS& data) { //запись в неименнованные каналы
+    write(fd, &data.n, sizeof(int)); 
     for (int i=0; i<data.n; ++i) {
         for (int j=0; j<data.n; ++j){
-            write(fd, &data.a[i][j], sizeof(double));
+            write(fd, &data.a[i][j], sizeof(double)); //записываем каждый элемент
         }
         write(fd, &data.y[i], sizeof(double));
         write(fd, &data.x[i], sizeof(double));
@@ -151,15 +151,8 @@ void writeToPipe (int fd, GAUSS& data) {
 }
 
 
-void readFromPipe(int fd, GAUSS& data) {
-    //read(fd, &data.n, sizeof(int));
-  // double** a = new double* [data.n];
-  // for (int i=0; i< data.n; ++i) {
-  //   data.a[i] = new double[data.n];
-  // }
-  // double* y = new double[data.n];
-  // double* x = new double[data.n];
-  
+void readFromPipe(int fd, GAUSS& data) { //читаем из канала
+  // здесь я оставила только массивы
   for (int i=0; i<data.n; ++i) {
     for (int j=0; j<data.n; ++j){
       read(fd, &data.a[i][j], sizeof(double));
@@ -175,7 +168,7 @@ void frontend()
 {
   GAUSS data;
   data.n = read_int("Введите количество уравнений: ");
-  data.a = new double* [data.n];
+  data.a = new double* [data.n]; //выделение области памяти
   for (int i=0; i<data.n; i++) {
     data.a[i] == new double[data.n];
   data.y = new double[data.n];
@@ -184,21 +177,21 @@ void frontend()
     {
      data.a[i] = new double[data.n];
         for (int j = 0; j < data.n; j++)
-        {data.a[i][j] = read_double(i,j,true);}
+        {data.a[i][j] = read_double(i,j,true);} //инициализируем значениями
     }
     for (int i = 0, j=1; i < data.n; i++)
     { data.y[i] = read_double(i, j, 0);
         data.x[i] = 0;
     }
-   sysout(data.a, data.y, data.n);
-   writeToPipe(pipe_in[1], data);
-    readFromPipe(pipe_out[0], data);
+   sysout(data.a, data.y, data.n); //проверка вывода системы уравнений
+   writeToPipe(pipe_in[1], data); //запись в канал первоначальных данных
+    readFromPipe(pipe_out[0], data); //чтение результатов
     
 cout << "Результат: " << endl;
 for (int i=0; i<data.n; i++) {
   cout << "x["<<i+1<<"]= " << data.x[i]<< endl;
 }
-    for(int i = 0; i < data.n; ++i)
+    for(int i = 0; i < data.n; ++i) //очистка памяти
         delete[] data.a[i];
     delete[] data.a;
 
@@ -211,15 +204,15 @@ exit(0);
 void backend()
 {
 GAUSS data;
-  read(pipe_in[0], &data.n, sizeof(int));
-  data.a = new double* [data.n];
+  read(pipe_in[0], &data.n, sizeof(int)); //чтение размера
+  data.a = new double* [data.n]; //выделение памяти в backend
   data.y = new double[data.n];
   data.x = new double[data.n];
-readFromPipe(pipe_in[0], data);
-data.x = gauss(data.a, data.y, data.n);
-writeToPipe(pipe_out[1], data);
+readFromPipe(pipe_in[0], data); //читаем данные, введенные пользователем
+data.x = gauss(data.a, data.y, data.n); //считаем
+writeToPipe(pipe_out[1], data);  //записываем
 
-    for(int i = 0; i < data.n; ++i)
+    for(int i = 0; i < data.n; ++i) //очищаем память
         delete[] data.a[i];
     delete[] data.a;
 
