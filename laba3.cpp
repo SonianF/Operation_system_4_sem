@@ -1,5 +1,6 @@
 //метод Гаусса для решения системы уравнений
 #include <iostream>
+#include <cstdlib>
 #include <string>
 #include <sys/types.h>
 #include <unistd.h>
@@ -12,7 +13,36 @@ cout << "Справка:\n" <<"Чтобы решить систему уравн
 cout <<"Для смены функции вычисления измените function() в исходном коде программы\n>_<\n";
 }
 
-double read_double(int &i, int &j, bool var)
+// Неименнованные каналы связи in и out
+int pipe_in[2]; //канал, с помощью которого мы записываем данные в дочерний процесс
+//первый элемент массива используется для чтения из канала, второй - для записи
+int pipe_out[2];
+pid_t pid;
+
+struct GAUSS {
+  int n; //количество уравненйи
+  double** a; //коэффециенты
+  double* y; //значения уравнений
+  double* x; //массив с корнями
+};
+
+int read_int(const string& msg) //ввод количества уравнений 
+{   int result;
+    string input;
+    bool flag = true;
+    while (flag) {
+        cout << msg;
+        cin >> result;
+        if((result <=1) || (cin.fail() || (cin.peek() != '\n'))){
+            cin.clear();
+            cin.ignore(1000, '\n');
+            cout << " > Ошибка ввода, попробуйте еще раз\n"; }
+        else{flag = false;} 
+    }
+    return result;
+}
+
+double read_double(int &i, int &j, bool var) //ввод коэффециетнов и значений
 {   double result;
     //string result;
     bool flag = true;
@@ -30,38 +60,6 @@ double read_double(int &i, int &j, bool var)
     }
     return result;
 }
-
-int read_int(const string& msg)
-{   int result;
-    string input;
-    bool flag = true;
-    while (flag) {
-        cout << msg;
-        cin >> result;
-        if((result <=0) || (cin.fail() || (cin.peek() != '\n'))){
-            cin.clear();
-            cin.ignore(1000, '\n');
-            cout << " > Ошибка ввода, попробуйте еще раз\n"; }
-        else{flag = false;} 
-    }
-    return result;
-}
-
-void sysout(double** a, double* y, int n) // Вывод системы уравнений
-{
-  for (int i = 0; i < n; i++)
-  {
-    for (int j = 0; j < n; j++)
-    {
-      cout << a[i][j] << "*x" << j;
-      if (j < n - 1)
-        cout << " + ";
-    }
-    cout << " = " << y[i] << endl;
-  }
-  return;
-}
-
 
 double* gauss(double** a, double* y, int n)
 {
@@ -125,98 +123,111 @@ double* gauss(double** a, double* y, int n)
   return x;
 }
 
-// Неименнованные каналы связи in и out
-int pipe_in[2]; //канал, с помощью которого мы записываем данные в дочерний процесс
-//первый элемент массива используется для чтения из канала, второй - для записи
-int pipe_out[2];
-pid_t pid;
 
-
-void writeToPipe(int fd, double** &a, double* &y, int &n, double* &x) {
-  write(fd, &n, sizeof(int));
-  for (int i=0; i<n; ++i) {
-    for (int j=0; j<n; ++j){
-      write(fd, &a[i][j], sizeof(double));
+void sysout(double** a, double* y, int n) // Вывод системы уравнений
+{
+  for (int i = 0; i < n; i++)
+  {
+    for (int j = 0; j < n; j++)
+    {
+      cout << a[i][j] << "*x" << j;
+      if (j < n - 1)
+        cout << " + ";
     }
-    write(fd, &y[i], sizeof(double));
-    write(fd, &x[i], sizeof(double));
+    cout << " = " << y[i] << endl;
   }
+  return;
+}
+
+void writeToPipe (int fd, GAUSS& data) {
+    write(fd, &data.n, sizeof(int));
+    for (int i=0; i<data.n; ++i) {
+        for (int j=0; j<data.n; ++j){
+            write(fd, &data.a[i][j], sizeof(double));
+        }
+        write(fd, &data.y[i], sizeof(double));
+        write(fd, &data.x[i], sizeof(double));
+    }
 }
 
 
-void readFromPipe(int fd, double** &a, double* &y, int &n, double* &x) {
-  read(fd, &n, sizeof(int));
-  a = new double*[n];
-  for (int i=0; i<n; ++i) {
-    a[i]=new double[n];
-  }
-  y = new double[n];
-  x = new double[n];
-
-  for (int i=0; i<n; ++i) {
-    for (int j=0; j<n; ++j){
-      read(fd, &a[i][j], sizeof(int));
+void readFromPipe(int fd, GAUSS& data) {
+    //read(fd, &data.n, sizeof(int));
+  // double** a = new double* [data.n];
+  // for (int i=0; i< data.n; ++i) {
+  //   data.a[i] = new double[data.n];
+  // }
+  // double* y = new double[data.n];
+  // double* x = new double[data.n];
+  
+  for (int i=0; i<data.n; ++i) {
+    for (int j=0; j<data.n; ++j){
+      read(fd, &data.a[i][j], sizeof(double));
     }
-    read(fd, &y[i], sizeof(int));
-    read(fd, &x[i], sizeof(int));
+    read(fd, &data.y[i], sizeof(double));
+    read(fd, &data.x[i], sizeof(double));
   }
 
 }
+
 
 void frontend()
 {
-  int n = read_int("Введите количество уравнений: ");
-  double** a = new double* [n];
-  double* y = new double[n];
-   double* x = new double[n];
-    for (int i = 0; i < n; i++)
+  GAUSS data;
+  data.n = read_int("Введите количество уравнений: ");
+  data.a = new double* [data.n];
+  data.y = new double[data.n];
+  data.x = new double[data.n];
+    for (int i = 0; i < data.n; i++)
     {
-        a[i] = new double[n];
-        for (int j = 0; j < n; j++)
-        {a[i][j] = read_double(i,j,true);}
-     }
-     for (int i = 0, j=1; i < n; i++)
-    {
-     y[i] = read_double(i, j, 0);
-   }
-   sysout(a, y, n);
-   writeToPipe(pipe_in[1], a, y, n, x);
-    readFromPipe(pipe_out[0], a, y, n,x);
-    cout << "Результат: " << endl;
-    for (int i=0; i<n; i++) {
-     cout << "x["<<i+1<<"]= " << x[i]<< endl;
+     data.a[i] = new double[data.n];
+        for (int j = 0; j < data.n; j++)
+        {data.a[i][j] = read_double(i,j,true);}
     }
-    exit(0);
+    for (int i = 0, j=1; i < data.n; i++)
+    { data.y[i] = read_double(i, j, 0);
+        data.x[i] = 0;
+    }
+   sysout(data.a, data.y, data.n);
+   writeToPipe(pipe_in[1], data);
+    readFromPipe(pipe_out[0], data);
+    
+cout << "Результат: " << endl;
+for (int i=0; i<data.n; i++) {
+  cout << "x["<<i+1<<"]= " << data.x[i]<< endl;
+}
+    for(int i = 0; i < data.n; ++i)
+        delete[] data.a[i];
+    delete[] data.a;
 
-    for(int i = 0; i < n; ++i)
-        delete[] a[i];
-    delete[] a;
-
-    delete [] x;
-    delete [] y;
+    delete [] data.x;
+    delete [] data.y;
+exit(0);
 }
 
 
 void backend()
 {
-int n;
-double** a = new double* [n];
-double* y = new double[n];
-double* x = new double[n];
-readFromPipe(pipe_out[0], a, y, n, x);
-cout << a[1]<<endl;
-x = gauss(a, y, n);
-cout << x <<endl;
-writeToPipe(pipe_out[1], a, y, n, x);
+GAUSS data;
+  read(pipe_in[0], &data.n, sizeof(int));
+  data.a = new double* [data.n];
+  for(int i = 0; i < data.n; ++i)
+    data.a[i] = new double[data.n];
 
-for(int i = 0; i < n; ++i)
-    delete[] a[i];
-delete[] a;
+  data.y = new double[data.n];
+  data.x = new double[data.n];
+readFromPipe(pipe_in[0], data);
+data.x = gauss(data.a, data.y, data.n);
+writeToPipe(pipe_out[1], data);
 
-delete [] x;
-delete [] y;
+    for(int i = 0; i < data.n; ++i)
+        delete[] data.a[i];
+    delete[] data.a;
 
+    delete [] data.x;
+    delete [] data.y;
 }
+
 
 int main(int argc, char const *argv[]) {
   setlocale(LC_ALL, 0);
@@ -245,5 +256,5 @@ int main(int argc, char const *argv[]) {
       close(pipe_out[i]);
       }
   }
-  return 0;
+  //return 0;
 }
