@@ -263,3 +263,5 @@ int main(int argc, char const *argv[]) {
   }
   return 0;
 }
+
+https://www.cyberforum.ru/cpp-beginners/thread571966.html?ysclid=ltyetdrhar137468310
