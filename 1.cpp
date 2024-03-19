@@ -27,7 +27,7 @@ struct GAUSS {
 
   ~GAUSS (){
     for(int i = 0; i < n; ++i)
-    delete[] a[i];
+      delete[] a[i];
     delete[] a;
     delete [] x;
     delete [] y;
@@ -85,7 +85,7 @@ void writeToPipe (int fd, GAUSS& data) {
 void readFromPipe(int fd, GAUSS& data) {
   read(fd, &data.n, sizeof(int));
 
-  double** a1 = new double* [data.n];
+  double** a = new double* [data.n];
   for (int i=0; i< data.n; ++i) {
     data.a[i] = new double[data.n];
   }
