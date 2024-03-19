@@ -1,4 +1,3 @@
-//метод Гаусса для решения системы уравнений
 #include <iostream>
 #include <string>
 #include <sys/types.h>
