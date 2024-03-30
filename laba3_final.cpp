@@ -1,4 +1,4 @@
-//метод Гаусса для решения системы уравнений
+  //метод Гаусса для решения системы уравнений
 #include <iostream>
 #include <cstdlib>
 #include <string>
@@ -50,13 +50,17 @@ double read_double(int &i, int &j, bool var) //ввод коэффециетно
       if (var ==1)
         cout << "a[" << i+1 << "][" << j+1 << "]= ";
       else
-      cout << "y[" << i+1 << "]= ";
+        cout << "y[" << i+1 << "]= ";
       cin >> result;
-      if((cin.fail() || (cin.peek() != '\n'))){
+      if((cin.fail() || (cin.peek() != '\n')))
+      {
             cin.clear();
             cin.ignore(1000, '\n');
             cout << " > Ошибка ввода, попробуйте еще раз\n";}
-      else{   flag = false; }
+      else
+      {   
+        flag = false; 
+      }
     }
     return result;
 }
@@ -152,15 +156,16 @@ void writeToPipe (int fd, GAUSS& data) {
 
 
 void readFromPipe(int fd, GAUSS& data) {
-    //read(fd, &data.n, sizeof(int));
-  // double** a = new double* [data.n];
-  // for (int i=0; i< data.n; ++i) {
-  //   data.a[i] = new double[data.n];
-  // }
-  // double* y = new double[data.n];
-  // double* x = new double[data.n];
-  
-  for (int i=0; i<data.n; ++i) {
+  read(fd, &data.n, sizeof(int));
+
+    data.a = new double *[data.n];
+    data.y = new double[data.n];
+    data.x = new double[data.n];
+    for (int i = 0; i < data.n; i++)
+    {
+        data.a[i] = new double[data.n];
+        }
+    for (int i=0; i<data.n; ++i) {
     for (int j=0; j<data.n; ++j){
       read(fd, &data.a[i][j], sizeof(double));
     }
@@ -190,11 +195,11 @@ void frontend()
     }
    sysout(data.a, data.y, data.n);
    writeToPipe(pipe_in[1], data);
-    readFromPipe(pipe_out[0], data);
+   readFromPipe(pipe_out[0], data);
     
 cout << "Результат: " << endl;
 for (int i=0; i<data.n; i++) {
-  cout << "x["<<i+1<<"]= " << data.x[i]<< endl;
+  cout << "x["<<i<<"]= " << data.x[i]<< endl;
 }
     for(int i = 0; i < data.n; ++i)
         delete[] data.a[i];
@@ -206,20 +211,12 @@ exit(0);
 }
 
 
-void backend()
-{
-GAUSS data;
-  read(pipe_in[0], &data.n, sizeof(int));
-  data.a = new double* [data.n];
-  for(int i = 0; i < data.n; ++i)
-    data.a[i] = new double[data.n];
 
-  data.y = new double[data.n];
-  data.x = new double[data.n];
+void backend(){ 
+  GAUSS data;
 readFromPipe(pipe_in[0], data);
 data.x = gauss(data.a, data.y, data.n);
 writeToPipe(pipe_out[1], data);
-
     for(int i = 0; i < data.n; ++i)
         delete[] data.a[i];
     delete[] data.a;
@@ -256,5 +253,5 @@ int main(int argc, char const *argv[]) {
       close(pipe_out[i]);
       }
   }
-  //return 0;
+  
 }
