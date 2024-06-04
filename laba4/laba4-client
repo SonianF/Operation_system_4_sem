@@ -1,0 +1,51 @@
+#include <iostream>
+#include <winsock2.h>
+#include "conio.h"
+#pragma comment(lib, "ws2_32.lib")
+#pragma warning(disable: 4996)
+using namespace std;
+int main() {
+	SetConsoleCP(1251);
+	SetConsoleOutputCP(1251);
+	WSAData wsaData; //создаем структуру для загрузки
+	WORD word = MAKEWORD(2, 1); // Версия библиотеки winsock
+	if (WSAStartup(word, &wsaData) != 0) {
+		//Указатель на структуру данных WSADATA для получения сведений о реализации сокетов Windows.
+		cout << "Error: ошибка подключения библиотеки\n";
+		WSACleanup();
+		return 0;
+	}
+	//Заполняем информацию об адресе сокета
+	SOCKADDR_IN sockAddr; //размер
+	sockAddr.sin_addr.s_addr = inet_addr("127.1.1.1"); // адрес
+	sockAddr.sin_port = htons(1111); //порт
+	sockAddr.sin_family = AF_INET; //семейство протоколов
+	SOCKET Connect = socket(AF_INET, SOCK_STREAM, 0); // сокет для соединения с сервером
+	if (!Connect) {
+		cout << "Error: Не удалось создать сокет!\n";
+		return 0;
+	}
+	//проверка на подключение к серверу
+	if (connect(Connect, (SOCKADDR*)&sockAddr, sizeof(sockAddr)) != 0)
+		cout << "Error: Ошибка подключения\n";
+	else {
+		cout << "Подключение произошло успешно!\n";
+		cout << "Введите что-нибудь: " << endl;
+		char s[1000];
+		for (int i = 0; i < 1000; ++i) {
+			char c;
+			s[i] = getch(); //функция, которая вернет значение ASCII для этого символа
+			if (s[i] == '\r') cout << endl;
+			if (s[i] == '\b') cout << "\b ";
+			c = s[i];
+			if (send(Connect, &c, 1, 0) == -1) {
+				cout <<endl << "Потеря соединения\n";
+				break;
+			}
+			cout << s[i];
+		}
+	}
+	closesocket(Connect);
+	WSACleanup(); //отключаем библиотеку и освобождаем ресурсы
+	return 0;
+}
