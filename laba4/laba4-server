@@ -1,0 +1,44 @@
+#include <WinSock2.h>
+#include <iostream>
+#pragma comment(lib, "ws2_32.lib")
+#pragma warning(disable: 4996)
+using namespace std;
+int main() {
+	SetConsoleCP(1251);
+	SetConsoleOutputCP(1251);
+	WSAData wsaData;
+	WORD word = MAKEWORD(2, 1);
+	if (WSAStartup(word, &wsaData) != 0) {
+		cout << "Error: ошибка подключения библиотеки\n";
+		WSACleanup();
+		return 0;
+	}
+	SOCKADDR_IN sockAddr;
+	int sizeOfSockAddr = sizeof(sockAddr);
+	sockAddr.sin_addr.s_addr = inet_addr("127.1.1.1");
+	sockAddr.sin_port = htons(1111);
+	sockAddr.sin_family = AF_INET;
+	SOCKET sListen = socket(AF_INET, SOCK_STREAM, 0);
+	bind(sListen, (SOCKADDR*)&sockAddr, sizeof(sockAddr)); //связь сокета с локальным адресом, для его использования на сервере
+	listen(sListen, 2); // прослушивание, сколько запросов ожидается
+	SOCKET connect = accept(sListen, (SOCKADDR*)&sockAddr, &sizeOfSockAddr);
+	if (connect == 0)
+		cout << "Error: Ошибка подключения\n";
+	else {
+		cout << "Клиент подключен!\n";
+		for (int i = 0; i < 10000; ++i) {
+			char c;
+			if (recv(connect, &c, 1, 0) == -1) {
+				cout << "Lost connection\n";
+				break;
+			}
+			if (c == '\r') cout << endl;
+			if (c == '\b') cout << "\b ";
+			cout << c;
+		}
+	}
+	closesocket(connect);
+	closesocket(sListen);
+	WSACleanup();
+	return 0;
+}
