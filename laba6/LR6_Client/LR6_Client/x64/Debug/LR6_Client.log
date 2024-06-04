@@ -1,0 +1,9 @@
+﻿  Client.cpp
+C:\Users\Mi\source\repos\LR6_Server\LR6_Server\Server.h(259,18): warning C4129: "M": нераспознанная escape-последовательность символов
+C:\Users\Mi\source\repos\LR6_Server\LR6_Server\Server.h(259,18): warning C4129: "s": нераспознанная escape-последовательность символов
+C:\Users\Mi\source\repos\LR6_Server\LR6_Server\Server.h(259,18): warning C4129: "L": нераспознанная escape-последовательность символов
+C:\Users\Mi\source\repos\LR6_Server\LR6_Server\Server.h(259,18): warning C4129: "D": нераспознанная escape-последовательность символов
+C:\Users\Mi\source\repos\LR6_Server\LR6_Server\Server.h(266,16): warning C4244: аргумент: преобразование "time_t" в "unsigned int", возможна потеря данных
+C:\Users\Mi\source\repos\LR6_Server\LR6_Server\Server.h(293,16): warning C4244: аргумент: преобразование "time_t" в "unsigned int", возможна потеря данных
+  Client.obj : обнаружен модуль MSIL; для MSIL последовательная компоновка отключена; выполняется полная компоновка
+  LR6_Client.vcxproj -> C:\Users\Mi\source\repos\LR6_Client\x64\Debug\LR6_Client.exe

@@ -1,0 +1,3 @@
+C:\Users\Mi\source\repos\LR6_Client\LR6_Client\x64\Debug\LR6_Client.vcxproj.AssemblyReference.cache
+C:\Users\Mi\source\repos\LR6_Client\LR6_Client\x64\Debug\LR6Client.Client.resources
+C:\Users\Mi\source\repos\LR6_Client\LR6_Client\x64\Debug\LR6_Client.vcxproj.GenerateResource.cache
